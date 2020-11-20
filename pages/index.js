@@ -1,7 +1,11 @@
 import Head from 'next/head'
+import useSWR from 'swr';
 import styles from '../styles/Home.module.css'
 
-export default function Home() {
+export default function Home(props) {
+  const fetcher = (url) => fetch(url).then((res) => res.json());
+  const { data } = useSWR('/api/data', fetcher);
+  console.log({ data })
   return (
     <div className={styles.container}>
       <Head>
