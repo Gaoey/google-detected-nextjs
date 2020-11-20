@@ -6,16 +6,20 @@ import styles from '../styles/Home.module.css'
 import { drawlineFromVertices } from '../lib/function'
 
 function drawing(canvas, ctx, page) {
-  console.log({ ctx })
   const drawFunc = drawlineFromVertices(ctx, page.width, page.height)
 
   page.blocks.map((block, i) => {
     let vertices = block.boundingBox.normalizedVertices
-    drawFunc(vertices, "yellow", `block ${i}`)
-    
+    drawFunc(vertices, "red", `block ${i}`)
+
     block.paragraphs.map((paragraph) => {
       let vertices = paragraph.boundingBox.normalizedVertices
       drawFunc(vertices, "green", `paragraph ${i}`)
+
+      paragraph.words.map((word) => {
+        let vertices = paragraph.boundingBox.normalizedVertices
+        drawFunc(vertices, "yellow", `word ${i}`)
+      })
     })
   })
 }
