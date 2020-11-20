@@ -1,69 +1,58 @@
+import React, { useRef, useEffect } from 'react';
 import Head from 'next/head'
 import useSWR from 'swr';
+import * as R from 'ramda'
 import styles from '../styles/Home.module.css'
+import { drawlineFromVertices } from '../lib/function'
+
+function drawing(canvas, ctx, page) {
+  console.log({ ctx })
+  const drawFunc = drawlineFromVertices(ctx, page.width, page.height)
+
+  page.blocks.map((block, i) => {
+    let vertices = block.boundingBox.normalizedVertices
+    drawFunc(vertices, "yellow", `block ${i}`)
+    
+    block.paragraphs.map((paragraph) => {
+      let vertices = paragraph.boundingBox.normalizedVertices
+      drawFunc(vertices, "green", `paragraph ${i}`)
+    })
+  })
+}
 
 export default function Home(props) {
+  const canvas = useRef()
+  let ctx = null
   const fetcher = (url) => fetch(url).then((res) => res.json());
   const { data } = useSWR('/api/data', fetcher);
-  console.log({ data })
+  const page = R.pathOr([], ["responses", 0, "fullTextAnnotation", "pages", 0], data)
+
+  useEffect(() => {
+    // dynamically assign the width and height to canvas
+    if (R.isNil(ctx)) {
+      const canvasEle = canvas.current;
+      canvasEle.width = page.width;
+      canvasEle.height = page.height;
+
+      // get context of the canvas
+      ctx = canvasEle.getContext("2d");
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, page.width, page.height);
+    }
+
+    if (!R.isEmpty(page)) {
+      drawing(canvas, ctx, page)
+    }
+  });
+
   return (
     <div className={styles.container}>
       <Head>
-        <title>Create Next App</title>
+        <title>Google Detected Text Visualized</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
+      <canvas ref={canvas} width={page.width} height={page.height} >
+      </canvas>
     </div>
   )
 }
