@@ -53,8 +53,6 @@ function createRecord(myObj, width, height) {
 
 
   let xOrigin = null
-  let check = []
-  let isBreak = false
   for (let k = 0; k <= row.length - 1; k++) {
     for (let l = k + 1; l <= row.length - 1; l++) {
       let targetArr = row[l].values
@@ -84,7 +82,10 @@ function createRecord(myObj, width, height) {
   }
 
   // sort order
-  let newRow = row.map(r => { return { values: r.values.sort(compareX), position: r.position } })
+  // let sortRowByYValue = row.sort(compareRowByYValue)
+  let sortRowByPosition = row.sort(comparePositionByY)
+  console.log({ sortRowByPosition })
+  let newRow = sortRowByPosition.map(r => { return { values: r.values.sort(compareX), position: r.position } })
 
   let textArr = newRow.filter(item => item.values.some(r => r.vertices[0].x === xOrigin))
   let noTextArr = newRow.filter(item => item.values.every(r => r.vertices[0].x !== xOrigin))
@@ -93,22 +94,48 @@ function createRecord(myObj, width, height) {
     const noTextElemTopLeftY = noTextElem.values[0].vertices[0].y
     const noTextElemBottomLeftY = noTextElem.values[0].vertices[3].y
     textArr.forEach(textElem => {
-      const textElemTopLeftY = textElem.values[2].vertices[0].y
-      const textElemBottomLeftY = textElem.values[2].vertices[3].y
+      const textElemTopLeftY = !R.isNil(textElem.values[2]) && textElem.values[2].vertices[0].y
+      const textElemBottomLeftY = !R.isNil(textElem.values[2]) && textElem.values[2].vertices[3].y
 
       const conditionOne = noTextElemTopLeftY >= textElemTopLeftY
       const conditionTwo = noTextElemBottomLeftY <= textElemBottomLeftY
       if (conditionOne && conditionTwo) {
+        // TODO: split text
+        // let fontSize = 8
+        // let lineHeight = fontSize * 1.8
+        // let originY = caly(textElem.values[2].vertices[0].y)
+        // let splitTextArr = textElem.values[2].conversation.split("\n")
+        // splitTextArr.forEach((v, i) => {
+        //   let textPosition = originY + i * (lineHeight + fontSize)
+        //   let eachY = caly(noTextElemTopLeftY)
+        //   if (eachY >= textPosition - 1 && eachY <= textPosition + 1) {
+        //     let n = { conversation: v, vertices: textElem.values[2].vertices }
+        //     textElem.values[2].conversation = splitTextArr.slice(1).join("\n")
+        //     noTextElem.values.push(n)
+        //   }
+        // })
         noTextElem.values.push(textElem.values[2])
       }
     })
   })
 
-  let mergeArr = [...textArr, ...noTextArr]
-  let sortYRow = mergeArr.map(r => { return { values: r.values.sort(compareY), position: r.position } })
-  let sortXRow = sortYRow.map(r => { return { values: r.values.sort(compareX), position: r.position } })
+  // let mergeArr = [...textArr, ...noTextArr]
+  let sortXRow1 = textArr.map(r => { return { values: r.values.sort(compareX), position: r.position } })
+  let sortXRow2 = noTextArr.map(r => { return { values: r.values.sort(compareX), position: r.position } })
 
-  console.log({ sortXRow })
+  // // TODO: clean duplicate date with the same vertices
+  console.log({ sortXRow1 })
+  console.log({ sortXRow2 })
+}
+
+function comparePositionByY(a, b) {
+  if (a.values[0].vertices[0].y > b.values[0].vertices[0].y) {
+    return 1
+  }
+  if (a.values[0].vertices[0].y < b.values[0].vertices[0].y) {
+    return -1
+  }
+  return 0
 }
 
 function compareX(a, b) {
