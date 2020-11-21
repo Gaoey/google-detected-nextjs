@@ -8,9 +8,10 @@ export default (req, res) => {
 
   const dir = path.join(serverRuntimeConfig.PROJECT_ROOT, './json');
 
-  const response = fs.readFileSync(dir + "/pdf.json");
+  const response = fs.readFileSync(dir + "/pdf1.json");
 
   const data = JSON.parse(response)
+
   res.statusCode = 200
   res.json(data);
 }
